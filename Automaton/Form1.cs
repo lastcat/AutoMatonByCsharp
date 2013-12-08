@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.IO;
 
 namespace Automaton
 {
@@ -21,6 +22,7 @@ namespace Automaton
         AutoMaton automaton = new AutoMaton();
         string[] lines;
         bool acception;
+        StreamWriter writer;
         private void button1_Click(object sender, EventArgs e)
         {
             OpenFileDialog ofd = new OpenFileDialog();
@@ -41,7 +43,7 @@ namespace Automaton
 
                     if (state.name[state.name.Length-1] == 'f')
                     {
-                        state.name = state.name.Trim('f');
+                        //state.name = state.name.Trim('f');
                         state.isFinalState = true;
                     }
                     automaton.states.Add(state);
@@ -53,11 +55,20 @@ namespace Automaton
         private void button2_Click(object sender, EventArgs e)
         {
             Console.Clear();
-            //automaton.TranslateINfaToNfa(automaton);
+            writer = new StreamWriter("C:\\Users\\Yoshitake\\Documents\\log.txt",false,System.Text.Encoding.GetEncoding("shift_jis"));
+            automaton.TranslateINfaToNfa(automaton,writer);
+            
+            var dfa = new AutoMaton();
+            var firstState = new State(automaton.states[0].name);
+            dfa.states.Add(firstState);
+            dfa.TranslateNfaToDfa(dfa,automaton,writer);
+            dfa.ToString();
+            
             string input = textBox1.Text;
-            acception = automaton.Transition(input, 0, automaton.states[0]);
+            acception = dfa.Transition(input, 0, dfa.states[0], writer);
             result.Text = acception.ToString();
             Console.WriteLine(acception.ToString());
+            //dfa.ToString();
         }
 
 
