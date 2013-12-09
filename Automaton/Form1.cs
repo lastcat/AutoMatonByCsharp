@@ -54,20 +54,23 @@ namespace Automaton
 
         private void button2_Click(object sender, EventArgs e)
         {
-            Console.Clear();
+            //Console.Clear();
             writer = new StreamWriter("C:\\Users\\Yoshitake\\Documents\\log.txt",false,System.Text.Encoding.GetEncoding("shift_jis"));
-            automaton.TranslateINfaToNfa(automaton,writer);
-            
+            automaton = automaton.TranslateINfaToNfa(automaton,writer);
+            //Console.WriteLine(automaton);
             var dfa = new AutoMaton();
             var firstState = new State(automaton.states[0].name);
             dfa.states.Add(firstState);
             dfa.TranslateNfaToDfa(dfa,automaton,writer);
-            dfa.ToString();
+            //dfa.ToString();
+
+            dfa.LogOutput();
             
             string input = textBox1.Text;
             acception = dfa.Transition(input, 0, dfa.states[0], writer);
             result.Text = acception.ToString();
             Console.WriteLine(acception.ToString());
+            
             //dfa.ToString();
         }
 

@@ -23,9 +23,17 @@ namespace Automaton
         {
             foreach(State s in states)
             {
-                s.ToString();
+                s.LogOutput();
             }
-            return "hoge";
+            return "OUTPUT";
+        }
+
+        public void LogOutput()
+        {
+            foreach (State s in states)
+            {
+                s.LogOutput();
+            }
         }
 
         public State FindStateByName(string name)
@@ -79,11 +87,23 @@ namespace Automaton
                 //groupを1状態に対応させたものがnfa　状態数は変わらないからすぐできそう上行の作業をすれば終わり
                 //nfaでの受理処理はだるいから最終的にdfaに変換することにしよう
                 var newState = new State(s.name);
-                foreach(State sing in group)
+                /*Console.WriteLine(s.name + "のグループ");
+                foreach(State test in group)
                 {
-                    foreach(Pointer p in sing.pointers)
+                    Console.WriteLine(test);
+                }*/
+                foreach(State sinG in group)
+                {
+                    foreach(Pointer p in sinG.pointers)
                     {
-                        newState.pointers.Add(p);
+                        //グループ内のpointerをチエック　同じグループ内なら自分にそうでないならその先に遷移するようにセットしなおす
+                        if (p.input != 'i')
+                        {
+                            if (newState.pointers.FirstOrDefault(el => el.input == p.input && p.dest == el.dest) == null)
+                            {
+                                newState.pointers.Add(new Pointer(p.input, p.dest));
+                            }
+                        }
                     }
                 }
                 newNfa.states.Add(newState);
@@ -107,7 +127,8 @@ namespace Automaton
                 writer.WriteLine(dfa.states[i].name + "を処理します" + dfa.states[i].processed.ToString());
                 
 
-                var objState = new State(dfa.states[i].name);
+                //var objState = new State(dfa.states[i].name);
+                var objState = dfa.states[i];
                 //if (dfa.states[i].processed) continue;
                 //↑が,区切りの名前の状態
                 //これもリストにしないといけない
@@ -122,11 +143,12 @@ namespace Automaton
                     nfaObjectStateList.Add(nfa.FindStateByName(obstName));
                 }
                 //状態遷移先の名前の集合
-                var destNameList = new List<string>();
+                //var destNameList = new List<string>();
                 //pointersのinputが0or1で分けないといけない
                 char[] alphabet = { '0', '1' };
                 for (int j = 0; j < alphabet.Length; j++)
                 {
+                    var destNameList = new List<string>();
                     writer.WriteLine("状態" + dfa.states[i].name + ":input" + alphabet[j] + "について");
 
                     foreach (State s in nfaObjectStateList)
@@ -153,24 +175,27 @@ namespace Automaton
                             //writer.Close();
                         }
                     }
-
-                    if (dfa.FindStateByName(string.Join(",", destNameList)) == null)
-                    //if (string.Join(",", destNameList) == "")
+                    if (string.Join(",", destNameList) != "")
                     {
-                        writer.WriteLine("新たな状態" + string.Join(",", destNameList));
-                        //destNameList.Reverse();
-                        objState.pointers.Add(new Pointer(alphabet[j], string.Join(",", destNameList)));
-                        var newState = new State(string.Join(",", destNameList));
-                        if (newState.name.Contains('f'))
-                            newState.isFinalState = true;
-                        dfa.states.Add(newState);
-                        //TranslateNfaToDfa(dfa, nfa, writer);
-                        //ここで再帰呼び出しって感じがする
-                    }
-                    else
-                    {
-                        writer.WriteLine("既存の状態" + string.Join(",", destNameList) + "を遷移先に登録しました");
-                        objState.pointers.Add(new Pointer(alphabet[j], string.Join(",", destNameList)));
+                        destNameList.Sort();
+                        if (dfa.FindStateByName(string.Join(",", destNameList)) == null)
+                        //if (string.Join(",", destNameList) == "")
+                        {
+                            writer.WriteLine("新たな状態" + string.Join(",", destNameList));
+                            //destNameList.Sort();
+                            objState.pointers.Add(new Pointer(alphabet[j], string.Join(",", destNameList)));
+                            var newState = new State(string.Join(",", destNameList));
+                            if (newState.name.Contains('f'))
+                                newState.isFinalState = true;
+                            dfa.states.Add(newState);
+                            //TranslateNfaToDfa(dfa, nfa, writer);
+                            //ここで再帰呼び出しって感じがする
+                        }
+                        else
+                        {
+                            writer.WriteLine("既存の状態" + string.Join(",", destNameList) + "を遷移先に登録しました");
+                            objState.pointers.Add(new Pointer(alphabet[j], string.Join(",", destNameList)));
+                        }
                     }
                     
                 }
@@ -194,7 +219,7 @@ namespace Automaton
                 {
                     if (p.input == c && !sg.Contains(FindStateByName(p.dest)))
                     {
-                        writer.WriteLine("ε遷移を追加" + p.dest);
+                        Console.WriteLine("ε遷移を追加" + p.dest);
                         //gr.Add(FindStateByName(p.dest));
                         sg.Add(FindStateByName(p.dest));
                         RecursiveFindDestState(ref sg, c,writer);
@@ -230,10 +255,16 @@ namespace Automaton
             //Console.WriteLine(this.isFinalState);
             foreach(Pointer p in this.pointers)
             {
-                Console.WriteLine("uooo");
                 p.ToString();
             }
             return "hoge";
+        }
+        public void LogOutput()
+        {
+            foreach(Pointer p in this.pointers)
+            {
+                Console.WriteLine(p);
+            }
         }
     }
 
@@ -247,6 +278,7 @@ namespace Automaton
             this.input = inp;
             this.dest = des;
         }
+
 
         public override string ToString()
         {
